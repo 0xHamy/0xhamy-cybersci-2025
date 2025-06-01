@@ -10,8 +10,10 @@ The incident response team have captured the executable binary that was used for
 
 Can you find the C2 server & hijjack it?
 
-We need to hack the hackers server. 
+From what we have seen on their darkweb forum, they are selling their malware for $39/monthly, here some screenshots:
+images
 
+The executable binary used on the cadidate's computer is here:
 Executable_download_link_here
 
 
