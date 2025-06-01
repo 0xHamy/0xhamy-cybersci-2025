@@ -1,57 +1,67 @@
 {% extends "base.html" %}
 {% block title %}Uploads{% endblock %}
 {% block content %}
-<h1 class="text-3xl font-bold mb-4">Uploads</h1>
+<div class="space-y-8 py-8">
+    <h1 class="text-4xl font-bold text-center">Uploads</h1>
 
-<h2 class="text-2xl font-semibold mb-2">Uploaded ZIP Files</h2>
-<div class="overflow-x-auto">
-    <table class="table w-full">
-        <thead>
-            <tr>
-                <th>File Name</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for zip_file in zip_files %}
-            <tr>
-                <td>{{ zip_file }}</td>
-                <td>
-                    <a href="{{ url_for('serve_file', filename=zip_file) }}" class="btn btn-primary btn-sm">Download</a>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="2">No ZIP files uploaded.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+    <div class="card bg-base-200 shadow-xl">
+        <div class="card-body">
+            <h2 class="text-2xl font-semibold mb-4">Uploaded ZIP Files</h2>
+            <div class="overflow-x-auto">
+                <table class="table w-full table-zebra">
+                    <thead>
+                        <tr>
+                            <th class="text-lg">File Name</th>
+                            <th class="text-lg">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for zip_file in zip_files %}
+                        <tr>
+                            <td>{{ zip_file }}</td>
+                            <td>
+                                <a href="{{ url_for('serve_file', filename=zip_file) }}" class="btn btn-primary btn-sm hover:btn-accent transition-colors">Download</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center">No ZIP files uploaded.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-<h2 class="text-2xl font-semibold mt-6 mb-2">Unzipped Files</h2>
-<div class="overflow-x-auto">
-    <table class="table w-full">
-        <thead>
-            <tr>
-                <th>File Path</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for file in unzipped_files %}
-            <tr>
-                <td>{{ file }}</td>
-                <td>
-                    <a href="{{ url_for('serve_file', filename=file) }}" class="btn btn-primary btn-sm">Open</a>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="2">No unzipped files available.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card bg-base-200 shadow-xl">
+        <div class="card-body">
+            <h2 class="text-2xl font-semibold mb-4">Unzipped Files</h2>
+            <div class="overflow-x-auto">
+                <table class="table w-full table-zebra">
+                    <thead>
+                        <tr>
+                            <th class="text-lg">File Path</th>
+                            <th class="text-lg">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in unzipped_files %}
+                        <tr>
+                            <td>{{ file }}</td>
+                            <td>
+                                <a href="{{ url_for('serve_file', filename=file) }}" class="btn btn-primary btn-sm hover:btn-accent transition-colors">Open</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="text-center">No unzipped files available.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
