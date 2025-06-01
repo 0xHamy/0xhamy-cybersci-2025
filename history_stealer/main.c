@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <curl/curl.h>
-#include <zip.h>
+#include "deps/curl/curl.h"
+#include "deps/zip.h"
 #include "config.h"
 
 #define MAX_PATH_LENGTH 260

