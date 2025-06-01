@@ -28,8 +28,7 @@ The web app is going to have all these pages:
 
 
 ### Stealer program
-A simple stealer with capabilities to either steal chrome history, explorer history or both and how often to steal them.
-There is a one-off attack and then there is once every nth days or 7 days.
+This is not a real stealer but just a program with an obfuscated C2 value. 
 
 
 ### Docker container setup 
