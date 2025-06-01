@@ -10,7 +10,7 @@ The incident response team have captured the executable binary that was used for
 
 Can you find the C2 server & hijjack it?
 
-We need to hack the hackers and steal their database.
+We need to hack the hackers server. 
 
 Executable_download_link_here
 
@@ -27,7 +27,7 @@ The web app is going to have all these pages:
 - Uploads
     - Showing all uploads & unzipped files with button to open it using a web browser explorer
 - Builder page
-    - A page where you can build an executable by writing C2 URL, Target chrome, explorer or both; configure how often to upload (once & self-destruct or every nth hours)
+    - A page where you can interact with the builder through web
 - file_upload endpoint 
 
 
