@@ -34,6 +34,11 @@ Compile with:
 mcs -optimize- Program.cs
 ```
 
+Grab C2 URL with:
+```
+strings -e l Program.exe
+```
+
 
 ### Docker container setup 
 
