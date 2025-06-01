@@ -10,17 +10,13 @@ The incident response team have captured the executable binary that was used for
 
 Can you find the C2 server & hijjack it?
 
-From what we have seen on their darkweb forum, they are selling their malware for $39/monthly, here some screenshots:
-images
-
-The executable binary used on the cadidate's computer is here:
+The executable binary found on the cadidate's computer is here:
 Executable_download_link_here
 
 
 ## Moving parts 
 This challenge is going to have several moving parts such as:
 - A web app & server for the C2
-- A MySQL database that holds passwords belonging to admins
 - An executable binary with a hardcoded but obfuscated C2 URL
 
 
@@ -28,8 +24,6 @@ This challenge is going to have several moving parts such as:
 The web app is going to have all these pages:
 - Uploads
     - Showing all uploads & unzipped files with button to open it using a web browser explorer
-- Builder page
-    - A page where you can interact with the builder through web
 - file_upload endpoint 
 
 
