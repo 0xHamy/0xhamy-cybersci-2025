@@ -64,6 +64,7 @@ def file_upload():
 
     return {"error": "Invalid file type"}, 400
 
+
 @app.route("/files/<path:filename>")
 def serve_file(filename):
     return send_from_directory(STATIC_FOLDER, filename)

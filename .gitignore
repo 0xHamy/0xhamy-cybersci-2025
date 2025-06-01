@@ -5,3 +5,4 @@ unzipped
 *.a
 deps
 .vscode
+*.exe

@@ -29,6 +29,10 @@ The web app is going to have all these pages:
 
 ### Stealer program
 This is not a real stealer but just a program with an obfuscated C2 value. 
+Compile with:
+```
+mcs -optimize- Program.cs
+```
 
 
 ### Docker container setup 
