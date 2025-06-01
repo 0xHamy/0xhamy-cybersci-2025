@@ -23,12 +23,17 @@ This challenge is going to have several moving parts such as:
 
 
 ### Web App
-The web app 
-
+The web app is going to have all these pages:
+- Uploads
+    - Showing all uploads & unzipped files with button to open it using a web browser explorer
+- Builder page
+    - A page where you can build an executable by writing C2 URL, Target chrome, explorer or both; configure how often to upload (once & self-destruct or every nth hours)
+- file_upload endpoint 
 
 
 ### Stealer program
-
+A simple stealer with capabilities to either steal chrome history, explorer history or both and how often to steal them.
+There is a one-off attack and then there is once every nth days or 7 days.
 
 
 ### Docker container setup 
