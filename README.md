@@ -28,7 +28,6 @@ The web app is going to have all these pages:
 
 
 ### Stealer program
-This is not a real stealer but just a program with an obfuscated C2 value. 
 Install dependencies:
 ```
 sudo apt install mono-complete python3-pip
@@ -47,7 +46,10 @@ strings -e l Program.exe
 
 
 ### Docker container setup 
-
+Run:
+```
+sudo docker compose up --build
+```
 
 
 # Todo
