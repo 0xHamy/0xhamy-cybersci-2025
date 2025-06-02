@@ -1,5 +1,5 @@
-# Use minimal Ubuntu base image
-FROM ubuntu:22.04
+# Use minimal Debian slim base image
+FROM debian:bullseye-slim
 
 # Set working directory
 WORKDIR /app
@@ -8,6 +8,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
+    python-is-python3 \
     gunicorn \
     cron \
     mono-complete \
