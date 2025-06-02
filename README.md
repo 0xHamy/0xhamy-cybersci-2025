@@ -37,7 +37,7 @@ sudo apt install mono-complete python3-pip
 
 Compile with:
 ```
-mcs -sdk:4.5 -target:exe -out:./steal.exe -platform:x64 -r:/usr/lib/mono/4.5/System.Net.Http.dll -r:/usr/lib/mono/4.5/System.IO.Compression.dll -r:/usr/lib/mono/4.5/System.IO.Compression.FileSystem.dll -r:./Newtonsoft.Json.dll -langversion:7.1 Program.cs
+mcs -sdk:4.5 -target:exe -out:./steal.exe -platform:x64 -r:/usr/lib/mono/4.5/System.Net.Http.dll -r:/usr/lib/mono/4.5/System.IO.Compression.dll -r:/usr/lib/mono/4.5/System.IO.Compression.FileSystem.dll -langversion:7.1 Program.cs
 ```
 
 Grab C2 URL with:
@@ -50,6 +50,10 @@ strings -e l Program.exe
 
 
 
+# Todo
+- [ ] Create docker container to run the C2 
+- [ ] Test upload against container
+- [ ]  
 
 
 
