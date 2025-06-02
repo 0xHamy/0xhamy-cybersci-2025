@@ -57,11 +57,13 @@ sudo docker compose up --build
 - [X] Give root permissions to your user to run c2 as root 
 - [X] Setup crontab and test it 
 - [X] Test upload against container
+- [ ] create a login page for user login; use it to restrict access to all endpoints except file_upload
+    - [ ] use easy to guess passwords so that players gain access and see what a real malware looks like 
 - [ ] localize daisyui for offline use
-- [ ] Make all endpoints except file upload restricted to localhost only
 - [ ] Make the unzipping functionality vulnerable
 - [ ] Test zip slip vulnerability against crontab
 - [ ] Get a shell on the system through the web app 
+- [ ] Place the flag in the root directory 
 - [ ] Prepare README
 
 
