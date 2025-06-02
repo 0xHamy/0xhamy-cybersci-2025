@@ -54,10 +54,12 @@ strings -e l Program.exe
 - [X] Create docker container to run the C2 
 - [X] Give root permissions to your user to run c2 as root 
 - [X] Setup crontab and test it 
-- [ ] Test upload against container
+- [X] Test upload against container
+- [ ] Make all endpoints except file upload restricted to localhost only
 - [ ] Make the unzipping functionality vulnerable
 - [ ] Test zip slip vulnerability against crontab
 - [ ] Get a shell on the system through the web app 
+
 
 
 
