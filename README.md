@@ -59,6 +59,7 @@ sudo docker compose up --build
 - [X] Test upload against container
 - [ ] create a login page for user login; use it to restrict access to all endpoints except file_upload
     - [ ] use easy to guess passwords so that players gain access and see what a real malware looks like 
+- [ ] Modify file_upload endpoint to properly state what's messing, this way users get an idea of how to upload something 
 - [ ] localize daisyui for offline use
 - [ ] Make the unzipping functionality vulnerable
 - [ ] Test zip slip vulnerability against crontab
