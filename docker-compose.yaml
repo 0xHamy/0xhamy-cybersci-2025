@@ -1,0 +1,12 @@
+services:
+  c2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./webapp/uploads:/app/webapp/uploads
+      - ./webapp/unzipped:/app/webapp/unzipped
+      - ./webapp/static/builds:/app/webapp/static/builds
+    restart: unless-stopped
