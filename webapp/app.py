@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_from_directory, flash, redirect, url_for
+from flask import Flask, render_template, request, send_from_directory, flash, redirect, url_for, Response
 import os
 import zipfile
 import shutil
@@ -27,12 +27,8 @@ def index():
 @app.route("/uploads")
 def uploads():
     zip_files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith(".zip")]
-    unzipped_files = []
-    for root, _, files in os.walk(UNZIPPED_FOLDER):
-        for file in files:
-            rel_path = os.path.relpath(os.path.join(root, file), UNZIPPED_FOLDER)
-            unzipped_files.append(rel_path)
-    return render_template("uploads.html", zip_files=zip_files, unzipped_files=unzipped_files)
+    unzipped_folders = [f for f in os.listdir(UNZIPPED_FOLDER) if os.path.isdir(os.path.join(UNZIPPED_FOLDER, f))]
+    return render_template("uploads.html", zip_files=zip_files, unzipped_folders=unzipped_folders)
 
 @app.route("/file_upload", methods=["POST"])
 def file_upload():
@@ -40,7 +36,7 @@ def file_upload():
         return {"error": "Missing file or computer name"}, 400
 
     file = request.files["file"]
-    computer_name = re.sub(r'[^\w-]', '_', request.form["computer_name"])  # Sanitize computer name
+    computer_name = re.sub(r'[^\w-]', '_', request.form["computer_name"]) 
 
     if file.filename == "":
         return {"error": "No file selected"}, 400
@@ -63,7 +59,38 @@ def file_upload():
 def serve_file(filename):
     if filename.endswith(".zip"):
         return send_from_directory(UPLOAD_FOLDER, filename)
-    return send_from_directory(STATIC_FOLDER, filename)
+    return send_from_directory(UNZIPPED_FOLDER, filename)
+
+@app.route("/view/<path:filename>")
+def view_file(filename):
+    file_path = os.path.join(UNZIPPED_FOLDER, filename)
+    if not os.path.isfile(file_path):
+        return {"error": "File not found"}, 404
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return Response(content, mimetype='text/plain')
+    except (UnicodeDecodeError, IOError):
+        return {"error": "Cannot read file as text"}, 400
+
+@app.route("/explore/<path:folder>")
+def explore_folder(folder):
+    print("Exploring folder: ", folder)
+    folder_path = os.path.join(UNZIPPED_FOLDER, folder)
+    print("Exploring folder: ", folder_path)
+    if not os.path.isdir(folder_path):
+        return {"error": "Folder not found"}, 404
+
+    items = []
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)
+        rel_path = os.path.relpath(item_path, UNZIPPED_FOLDER)
+        items.append({
+            "name": item,
+            "path": rel_path,
+            "is_dir": os.path.isdir(item_path)
+        })
+    return {"items": items}
 
 @app.route("/builder", methods=["GET", "POST"])
 def builder():
@@ -102,4 +129,3 @@ def builder():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
