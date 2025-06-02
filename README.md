@@ -29,9 +29,15 @@ The web app is going to have all these pages:
 
 ### Stealer program
 This is not a real stealer but just a program with an obfuscated C2 value. 
+Install dependencies:
+```
+sudo apt install mono-complete python3-pip
+```
+
+
 Compile with:
 ```
-mcs -optimize- Program.cs
+mcs -sdk:4.5 -target:exe -out:./steal.exe -platform:x64 -r:/usr/lib/mono/4.5/System.Net.Http.dll -r:/usr/lib/mono/4.5/System.IO.Compression.dll -r:/usr/lib/mono/4.5/System.IO.Compression.FileSystem.dll -r:./Newtonsoft.Json.dll -langversion:7.1 Program.cs
 ```
 
 Grab C2 URL with:

