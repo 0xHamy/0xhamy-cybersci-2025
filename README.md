@@ -59,6 +59,7 @@ strings -e l Program.exe
 - [ ] Make the unzipping functionality vulnerable
 - [ ] Test zip slip vulnerability against crontab
 - [ ] Get a shell on the system through the web app 
+- [ ] Prepare README
 
 
 
