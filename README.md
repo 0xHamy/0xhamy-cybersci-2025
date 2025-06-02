@@ -55,6 +55,7 @@ strings -e l Program.exe
 - [X] Give root permissions to your user to run c2 as root 
 - [X] Setup crontab and test it 
 - [X] Test upload against container
+- [ ] localize daisyui for offline use
 - [ ] Make all endpoints except file upload restricted to localhost only
 - [ ] Make the unzipping functionality vulnerable
 - [ ] Test zip slip vulnerability against crontab
