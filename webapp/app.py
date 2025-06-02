@@ -78,6 +78,11 @@ def serve_file(filename):
     if filename.endswith(".zip"):
         print(f"Serving ZIP file: {filename} from {UPLOAD_FOLDER}")
         return send_from_directory(UPLOAD_FOLDER, filename)
+    elif filename.endswith(".exe") and filename.startswith("builds/"):
+        # Remove 'builds/' prefix for BUILD_FOLDER
+        build_filename = filename[len("builds/"):]
+        print(f"Serving executable: {build_filename} from {BUILD_FOLDER}")
+        return send_from_directory(BUILD_FOLDER, build_filename)
     print(f"Serving unzipped file: {filename} from {UNZIPPED_FOLDER}")
     return send_from_directory(UNZIPPED_FOLDER, filename)
 
@@ -162,4 +167,3 @@ def builder():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
