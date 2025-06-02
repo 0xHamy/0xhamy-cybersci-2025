@@ -52,8 +52,12 @@ strings -e l Program.exe
 
 # Todo
 - [ ] Create docker container to run the C2 
+- [ ] Give root permissions to your user to run c2 as root 
+- [ ] Setup crontab and test it 
 - [ ] Test upload against container
-- [ ]  
+- [ ] Make the unzipping functionality vulnerable
+- [ ] Test zip slip vulnerability against crontab
+- [ ] Get a shell on the system through the web app 
 
 
 
