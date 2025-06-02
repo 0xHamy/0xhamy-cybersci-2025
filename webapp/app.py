@@ -5,7 +5,6 @@ import shutil
 from builder import build_executable
 import re
 
-
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
@@ -33,9 +32,7 @@ def uploads():
         for file in files:
             rel_path = os.path.relpath(os.path.join(root, file), UNZIPPED_FOLDER)
             unzipped_files.append(rel_path)
-    
     return render_template("uploads.html", zip_files=zip_files, unzipped_files=unzipped_files)
-
 
 @app.route("/file_upload", methods=["POST"])
 def file_upload():
@@ -43,36 +40,30 @@ def file_upload():
         return {"error": "Missing file or computer name"}, 400
 
     file = request.files["file"]
-    computer_name = request.form["computer_name"]
+    computer_name = re.sub(r'[^\w-]', '_', request.form["computer_name"])  # Sanitize computer name
 
     if file.filename == "":
         return {"error": "No file selected"}, 400
 
     if file and file.filename.endswith(".zip"):
-        zip_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        zip_filename = f"{computer_name}.zip"
+        zip_path = os.path.join(UPLOAD_FOLDER, zip_filename)
         file.save(zip_path)
 
-        unzip_path = os.path.join(UNZIPPED_FOLDER, os.path.splitext(file.filename)[0])
+        unzip_path = os.path.join(UNZIPPED_FOLDER, computer_name)
         os.makedirs(unzip_path, exist_ok=True)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(unzip_path)
-
-        for root, _, files in os.walk(unzip_path):
-            for f in files:
-                src = os.path.join(root, f)
-                dst = os.path.join(STATIC_FOLDER, os.path.relpath(src, unzip_path))
-                os.makedirs(os.path.dirname(dst), exist_ok=True)
-                shutil.copy2(src, dst)
 
         return {"status": "success", "computer_name": computer_name}, 200
 
     return {"error": "Invalid file type"}, 400
 
-
 @app.route("/files/<path:filename>")
 def serve_file(filename):
+    if filename.endswith(".zip"):
+        return send_from_directory(UPLOAD_FOLDER, filename)
     return send_from_directory(STATIC_FOLDER, filename)
-
 
 @app.route("/builder", methods=["GET", "POST"])
 def builder():
@@ -109,7 +100,6 @@ def builder():
 
     return render_template("builder.html", exe_files=exe_files)
 
-
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+

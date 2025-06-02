@@ -36,31 +36,16 @@
 
     <div class="card bg-base-200 shadow-xl">
         <div class="card-body">
-            <h2 class="text-2xl font-semibold mb-4">Unzipped Files</h2>
-            <div class="overflow-x-auto">
-                <table class="table w-full table-zebra">
-                    <thead>
-                        <tr>
-                            <th class="text-lg">File Path</th>
-                            <th class="text-lg">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for file in unzipped_files %}
-                        <tr>
-                            <td>{{ file }}</td>
-                            <td>
-                                <a href="{{ url_for('serve_file', filename=file) }}" class="btn btn-primary btn-sm hover:btn-accent transition-colors">Open</a>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="2" class="text-center">No unzipped files available.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <h2 class="text-2xl font-semibold mb-4">Unzipped File Paths</h2>
+            {% if unzipped_files %}
+                <ul class="list-disc pl-5">
+                    {% for file in unzipped_files %}
+                        <li>{{ file }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-center text-gray-500">No unzipped files available.</p>
+            {% endif %}
         </div>
     </div>
 </div>
