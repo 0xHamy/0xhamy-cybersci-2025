@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     python-is-python3 \
     gunicorn \
     cron \
+    unzip \
     mono-complete \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

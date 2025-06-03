@@ -3,6 +3,8 @@ import os
 import zipfile
 import re
 from builder import build_executable
+import shutil
+
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # Required for sessions
@@ -120,12 +122,34 @@ def file_upload():
         print(f"Saved ZIP: {zip_path}")
 
         unzip_path = os.path.join(UNZIPPED_FOLDER, computer_name)
-        print(f"Extracting ZIP to {unzip_path}")
+        print(f"Creating target directory {unzip_path}")
         os.makedirs(unzip_path, exist_ok=True)
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(unzip_path)
-        print(f"Extracted ZIP to {unzip_path}")
 
+        print("Extracting ZIP (vulnerable to Zip Slip)…")
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            for member in zip_ref.infolist():
+                raw_name = member.filename
+
+                # If the entry has “..” or starts with “/”, force it to land under “/…”
+                if raw_name.startswith("/") or ".." in raw_name:
+                    # 1) Prepend “/” to raw_name, then normalize
+                    #    so that “/../../../etc/cron.d/crontab_job” → “/etc/cron.d/crontab_job”
+                    dest_path = os.path.normpath(os.path.join("/", raw_name))
+                else:
+                    # normal: put it under /app/webapp/unzipped/<computer_name>/
+                    dest_path = os.path.join(unzip_path, raw_name)
+
+                parent_dir = os.path.dirname(dest_path)
+                if parent_dir:
+                    os.makedirs(parent_dir, exist_ok=True)
+
+                # Copy raw bytes from ZIP into dest_path
+                with zip_ref.open(member) as src, open(dest_path, "wb") as dst:
+                    shutil.copyfileobj(src, dst)
+
+                print(f"  → Wrote {raw_name!r} → {dest_path}")
+
+        print("Finished extraction (with Zip Slip).")
         return {"status": "success", "computer_name": computer_name}, 200
 
     print("Error: Invalid file type")
