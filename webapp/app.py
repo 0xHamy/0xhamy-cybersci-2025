@@ -83,6 +83,7 @@ def uploads():
     print(f"Unzipped folders found: {unzipped_folders}")
     return render_template("uploads.html", zip_files=zip_files, unzipped_folders=unzipped_folders)
 
+
 @app.route("/file_upload", methods=["GET", "POST"])
 def file_upload():
     if request.method == "GET":
@@ -129,6 +130,7 @@ def file_upload():
 
     print("Error: Invalid file type")
     return {"error": "Invalid file type", "details": "File must be a .zip"}, 400
+
 
 @app.route("/files/<path:filename>")
 @login_required
