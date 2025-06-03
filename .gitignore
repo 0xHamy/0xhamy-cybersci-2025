@@ -7,3 +7,4 @@ deps
 .vscode
 *.exe
 static
+*.zip

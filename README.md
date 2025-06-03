@@ -56,9 +56,7 @@ sudo docker compose down && sudo docker compose build --no-cache && sudo docker 
 
 
 # Todo
-- [ ] Make the unzipping functionality vulnerable
-- [ ] Test zip slip vulnerability against crontab
-- [ ] Get a shell on the system through the web app 
+- [X] Get shell through zip slip 
 - [ ] Prepare README
 
 
