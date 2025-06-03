@@ -195,7 +195,7 @@ def view_file(filename):
 @login_required
 def explore_folder(folder):
     print(f"Exploring folder: {folder}")
-    folder_path = os.path.join(UNZIPPED_FOLDER, floor)
+    folder_path = os.path.join(UNZIPPED_FOLDER, folder)
     print(f"Folder path: {folder_path}")
     if not os.path.isdir(folder_path):
         print(f"Error: Folder not found: {folder_path}")
