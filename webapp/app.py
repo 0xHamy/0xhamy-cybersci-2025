@@ -1,12 +1,11 @@
-from flask import Flask, render_template, request, send_from_directory, flash, redirect, url_for, Response
+from flask import Flask, render_template, request, send_from_directory, flash, redirect, url_for, Response, session
 import os
 import zipfile
-import shutil
-from builder import build_executable
 import re
+from builder import build_executable
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"
+app.secret_key = "supersecretkey"  # Required for sessions
 
 # Base directory for webapp
 BASE_DIR = "/app/webapp"
@@ -25,12 +24,52 @@ os.makedirs(STATIC_FOLDER, exist_ok=True)
 os.makedirs(BUILD_FOLDER, exist_ok=True)
 print(f"Directories created: {UPLOAD_FOLDER}, {UNZIPPED_FOLDER}, {STATIC_FOLDER}, {BUILD_FOLDER}")
 
+# Hardcoded 4-digit PIN
+PIN = "1234"
+
+# Decorator to protect routes
+def login_required(f):
+    def wrap(*args, **kwargs):
+        if 'logged_in' not in session or not session['logged_in']:
+            print("Unauthorized access, redirecting to login")
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    wrap.__name__ = f.__name__
+    return wrap
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if 'logged_in' in session and session['logged_in']:
+        print("Already logged in, redirecting to uploads")
+        return redirect(url_for("uploads"))
+    if request.method == "POST":
+        pin = request.form.get("pin")
+        print(f"Login attempt with PIN: {pin}")
+        if pin == PIN:
+            session['logged_in'] = True
+            next_url = request.args.get("next") or url_for("uploads")
+            print(f"Login successful, redirecting to {next_url}")
+            return redirect(next_url)
+        else:
+            print("Invalid PIN")
+            flash("Invalid PIN. Please try again.", "error")
+    return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    session.pop('logged_in', None)
+    print("Logged out")
+    flash("You have been logged out.", "success")
+    return redirect(url_for("login"))
+
 @app.route("/")
+@login_required
 def index():
     print("Redirecting to /uploads")
     return redirect(url_for("uploads"))
 
 @app.route("/uploads")
+@login_required
 def uploads():
     print(f"Listing ZIP files in {UPLOAD_FOLDER}")
     zip_files = [f for f in os.listdir(UPLOAD_FOLDER) if f.endswith(".zip")]
@@ -40,19 +79,33 @@ def uploads():
     print(f"Unzipped folders found: {unzipped_folders}")
     return render_template("uploads.html", zip_files=zip_files, unzipped_folders=unzipped_folders)
 
-@app.route("/file_upload", methods=["POST"])
+@app.route("/file_upload", methods=["GET", "POST"])
 def file_upload():
-    if "file" not in request.files or "computer_name" not in request.form:
-        print("Error: Missing file or computer name")
-        return {"error": "Missing file or computer name"}, 400
+    if request.method == "GET":
+        print("GET request to /file_upload")
+        return {
+            "error": "Method not allowed",
+            "details": "Use POST to upload a ZIP file with 'file' (multipart/form-data) and 'computer_name' (form field)"
+        }, 405
+
+    # POST request
+    errors = []
+    if "file" not in request.files:
+        errors.append("Missing 'file' in multipart/form-data")
+    if "computer_name" not in request.form:
+        errors.append("Missing 'computer_name' in form data")
+
+    if errors:
+        print(f"Upload errors: {errors}")
+        return {"error": "Invalid request", "details": errors}, 400
 
     file = request.files["file"]
-    computer_name = re.sub(r'[^\w-]', '_', request.form["computer_name"]) 
+    computer_name = re.sub(r'[^\w-]', '_', request.form["computer_name"])
     print(f"Received upload request for computer: {computer_name}")
 
     if file.filename == "":
         print("Error: No file selected")
-        return {"error": "No file selected"}, 400
+        return {"error": "No file selected", "details": "The 'file' field is empty"}, 400
 
     if file and file.filename.endswith(".zip"):
         zip_filename = f"{computer_name}.zip"
@@ -71,15 +124,15 @@ def file_upload():
         return {"status": "success", "computer_name": computer_name}, 200
 
     print("Error: Invalid file type")
-    return {"error": "Invalid file type"}, 400
+    return {"error": "Invalid file type", "details": "File must be a .zip"}, 400
 
 @app.route("/files/<path:filename>")
+@login_required
 def serve_file(filename):
     if filename.endswith(".zip"):
         print(f"Serving ZIP file: {filename} from {UPLOAD_FOLDER}")
         return send_from_directory(UPLOAD_FOLDER, filename)
     elif filename.endswith(".exe") and filename.startswith("builds/"):
-        # Remove 'builds/' prefix for BUILD_FOLDER
         build_filename = filename[len("builds/"):]
         print(f"Serving executable: {build_filename} from {BUILD_FOLDER}")
         return send_from_directory(BUILD_FOLDER, build_filename)
@@ -87,6 +140,7 @@ def serve_file(filename):
     return send_from_directory(UNZIPPED_FOLDER, filename)
 
 @app.route("/view/<path:filename>")
+@login_required
 def view_file(filename):
     file_path = os.path.join(UNZIPPED_FOLDER, filename)
     print(f"Viewing file: {file_path}")
@@ -103,9 +157,10 @@ def view_file(filename):
         return {"error": "Cannot read file as text"}, 400
 
 @app.route("/explore/<path:folder>")
+@login_required
 def explore_folder(folder):
     print(f"Exploring folder: {folder}")
-    folder_path = os.path.join(UNZIPPED_FOLDER, folder)
+    folder_path = os.path.join(UNZIPPED_FOLDER, floor)
     print(f"Folder path: {folder_path}")
     if not os.path.isdir(folder_path):
         print(f"Error: Folder not found: {folder_path}")
@@ -124,6 +179,7 @@ def explore_folder(folder):
     return {"items": items}
 
 @app.route("/builder", methods=["GET", "POST"])
+@login_required
 def builder():
     print(f"Listing executables in {BUILD_FOLDER}")
     exe_files = [f for f in os.listdir(BUILD_FOLDER) if f.endswith(".exe")]

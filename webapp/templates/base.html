@@ -14,8 +14,13 @@
         </div>
         <div class="flex-none">
             <ul class="menu menu-horizontal px-2 gap-2">
-                <li><a href="{{ url_for('uploads') }}" class="btn btn-sm btn-ghost">Uploads</a></li>
-                <li><a href="{{ url_for('builder') }}" class="btn btn-sm btn-ghost">Builder</a></li>
+                {% if session.logged_in %}
+                    <li><a href="{{ url_for('uploads') }}" class="btn btn-sm btn-ghost">Uploads</a></li>
+                    <li><a href="{{ url_for('builder') }}" class="btn btn-sm btn-ghost">Builder</a></li>
+                    <li><a href="{{ url_for('logout') }}" class="btn btn-sm btn-ghost">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="btn btn-sm btn-ghost">Login</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>
