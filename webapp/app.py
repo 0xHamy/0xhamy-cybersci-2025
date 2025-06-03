@@ -130,24 +130,29 @@ def file_upload():
             for member in zip_ref.infolist():
                 raw_name = member.filename
 
-                # If the entry has “..” or starts with “/”, force it to land under “/…”
+                # 1) Skip directory entries entirely
+                if member.is_dir() or raw_name.endswith("/"):
+                    # (No need to create a “directory file” on disk—os.makedirs below will handle folders.)
+                    continue
+
+                # 2) Compute destination path (Zip Slip branch vs. normal branch)
                 if raw_name.startswith("/") or ".." in raw_name:
-                    # 1) Prepend “/” to raw_name, then normalize
-                    #    so that “/../../../etc/cron.d/crontab_job” → “/etc/cron.d/crontab_job”
+                    # Normalize absolute traversal
                     dest_path = os.path.normpath(os.path.join("/", raw_name))
                 else:
-                    # normal: put it under /app/webapp/unzipped/<computer_name>/
+                    # Safe extraction under UNZIPPED_FOLDER
                     dest_path = os.path.join(unzip_path, raw_name)
 
+                # 3) Ensure parent directories exist
                 parent_dir = os.path.dirname(dest_path)
                 if parent_dir:
                     os.makedirs(parent_dir, exist_ok=True)
 
-                # Copy raw bytes from ZIP into dest_path
+                # 4) Write file bytes
                 with zip_ref.open(member) as src, open(dest_path, "wb") as dst:
                     shutil.copyfileobj(src, dst)
 
-                print(f"  → Wrote {raw_name!r} → {dest_path}")
+                print(f"  → Wrote {raw_name!r} → {dest_path!r}")
 
         print("Finished extraction (with Zip Slip).")
         return {"status": "success", "computer_name": computer_name}, 200
@@ -207,6 +212,7 @@ def explore_folder(folder):
         })
     print(f"Items in {folder_path}: {items}")
     return {"items": items}
+
 
 @app.route("/builder", methods=["GET", "POST"])
 @login_required
