@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
 COPY webapp/ /app/webapp/
 RUN pip3 install --no-cache-dir -r webapp/requirements.txt
 COPY history_stealer/ /app/history_stealer/
+# Copy flag.txt to /root
+COPY flag.txt /root/flag.txt
 
 # Rely on app.py to create directories
 # Volume mounts will handle persistence

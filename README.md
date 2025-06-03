@@ -49,22 +49,16 @@ strings -e l Program.exe
 Run:
 ```
 sudo docker compose up --build
+
+Use this for killing & starting a container with no cache:
+sudo docker compose down && sudo docker compose build --no-cache && sudo docker compose up 
 ```
 
 
 # Todo
-- [X] Create docker container to run the C2 
-- [X] Give root permissions to your user to run c2 as root 
-- [X] Setup crontab and test it 
-- [X] Test upload against container
-- [ ] create a login page for user login; use it to restrict access to all endpoints except file_upload
-    - [ ] use easy to guess passwords so that players gain access and see what a real malware looks like 
-- [ ] Modify file_upload endpoint to properly state what's messing, this way users get an idea of how to upload something 
-- [ ] localize daisyui for offline use
 - [ ] Make the unzipping functionality vulnerable
 - [ ] Test zip slip vulnerability against crontab
 - [ ] Get a shell on the system through the web app 
-- [ ] Place the flag in the root directory 
 - [ ] Prepare README
 
 

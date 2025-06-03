@@ -25,7 +25,7 @@ os.makedirs(BUILD_FOLDER, exist_ok=True)
 print(f"Directories created: {UPLOAD_FOLDER}, {UNZIPPED_FOLDER}, {STATIC_FOLDER}, {BUILD_FOLDER}")
 
 # Hardcoded 4-digit PIN
-PIN = "1234"
+PIN = "1337"
 
 # Decorator to protect routes
 def login_required(f):
@@ -45,15 +45,19 @@ def login():
     if request.method == "POST":
         pin = request.form.get("pin")
         print(f"Login attempt with PIN: {pin}")
-        if pin == PIN:
+        if not pin or not pin.isdigit() or len(pin) != 4:
+            print("Invalid PIN format")
+            flash("Invalid PIN format. Please enter a 4-digit PIN.", "error")
+        elif pin == PIN:
             session['logged_in'] = True
             next_url = request.args.get("next") or url_for("uploads")
             print(f"Login successful, redirecting to {next_url}")
             return redirect(next_url)
         else:
-            print("Invalid PIN")
-            flash("Invalid PIN. Please try again.", "error")
+            print("Incorrect PIN")
+            flash("Incorrect PIN. Please try again.", "error")
     return render_template("login.html")
+
 
 @app.route("/logout")
 def logout():
