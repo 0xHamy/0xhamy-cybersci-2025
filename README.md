@@ -70,6 +70,8 @@ Use this for killing & starting a container with no cache:
 sudo docker compose down && sudo docker compose build --no-cache && sudo docker compose up 
 ```
 
+This will also copy flag.txt to `/root` directory of the docker container.
+
 
 ### Deployment advice
 This challenge needs multiple server instances and one domain. After deploying the server, use its build interface and generate an executable that points to the URL where file_endpoint is located at. Example:
@@ -79,5 +81,7 @@ http://127.0.0.1/file_upload
 
 
 
+# Contact
+For any problems regarding this challenge, contact me on GitHub or Discord @0xHamy.
 
 
