@@ -98,7 +98,7 @@ def file_upload():
     errors = []
     if "file" not in request.files or "computer_name" not in request.form:
         print("Error: Missing file or computer_name")
-        return {"error": "Missing archive or name"}, 400
+        return {"error": "Missing archive or name."}, 400
 
     file = request.files["file"]
     computer_name = re.sub(r'[^\w-]', '_', request.form["computer_name"])
