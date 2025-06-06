@@ -79,6 +79,8 @@ This challenge needs multiple server instances and one domain. After deploying t
 http://127.0.0.1/file_upload
 ```
 
+### Few new developments:
+- As instructed, I have made `file_upload` endpoint more like a blackbox, players wouldn't know what's required to upload zip files unless they decompile the C# program (with ILSpy) or run the executable binary & capture network requests. 
 
 
 # Contact
