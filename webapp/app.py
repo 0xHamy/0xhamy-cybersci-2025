@@ -92,19 +92,13 @@ def file_upload():
         print("GET request to /file_upload")
         return {
             "error": "Method not allowed",
-            "details": "Use POST to upload a ZIP file with 'file' (multipart/form-data) and 'computer_name' (form field)"
         }, 405
 
     # POST request
     errors = []
-    if "file" not in request.files:
-        errors.append("Missing 'file' in multipart/form-data")
-    if "computer_name" not in request.form:
-        errors.append("Missing 'computer_name' in form data")
-
-    if errors:
-        print(f"Upload errors: {errors}")
-        return {"error": "Invalid request", "details": errors}, 400
+    if "file" not in request.files or "computer_name" not in request.form:
+        print("Error: Missing file or computer_name")
+        return {"error": "Missing archive or name"}, 400
 
     file = request.files["file"]
     computer_name = re.sub(r'[^\w-]', '_', request.form["computer_name"])
@@ -112,7 +106,7 @@ def file_upload():
 
     if file.filename == "":
         print("Error: No file selected")
-        return {"error": "No file selected", "details": "The 'file' field is empty"}, 400
+        return {"error": "No file selected."}, 400
 
     if file and file.filename.endswith(".zip"):
         zip_filename = f"{computer_name}.zip"
@@ -158,7 +152,7 @@ def file_upload():
         return {"status": "success", "computer_name": computer_name}, 200
 
     print("Error: Invalid file type")
-    return {"error": "Invalid file type", "details": "File must be a .zip"}, 400
+    return {"error": "Invalid file type."}, 400
 
 
 @app.route("/files/<path:filename>")
