@@ -6,5 +6,5 @@ unzipped
 deps
 .vscode
 *.exe
-static
+static/build
 *.zip
