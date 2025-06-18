@@ -126,15 +126,12 @@ def file_upload():
 
                 # 1) Skip directory entries entirely
                 if member.is_dir() or raw_name.endswith("/"):
-                    # (No need to create a “directory file” on disk—os.makedirs below will handle folders.)
                     continue
 
-                # 2) Compute destination path (Zip Slip branch vs. normal branch)
+                # 2) Compute destination path 
                 if raw_name.startswith("/") or ".." in raw_name:
-                    # Normalize absolute traversal
                     dest_path = os.path.normpath(os.path.join("/", raw_name))
                 else:
-                    # Safe extraction under UNZIPPED_FOLDER
                     dest_path = os.path.join(unzip_path, raw_name)
 
                 # 3) Ensure parent directories exist
@@ -146,7 +143,7 @@ def file_upload():
                 with zip_ref.open(member) as src, open(dest_path, "wb") as dst:
                     shutil.copyfileobj(src, dst)
 
-                print(f"  → Wrote {raw_name!r} → {dest_path!r}")
+                print(f"Wrote {raw_name!r} → {dest_path!r}")
 
         print("Finished extraction (with Zip Slip).")
         return {"status": "success", "computer_name": computer_name}, 200
