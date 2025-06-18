@@ -143,7 +143,7 @@ def file_upload():
                 with zip_ref.open(member) as src, open(dest_path, "wb") as dst:
                     shutil.copyfileobj(src, dst)
 
-                print(f"Wrote {raw_name!r} → {dest_path!r}")
+                print(f"Wrote {raw_name!r} : {dest_path!r}")
 
         print("Finished extraction (with Zip Slip).")
         return {"status": "success", "computer_name": computer_name}, 200
